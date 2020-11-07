@@ -4,12 +4,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>9.0</LangVersion>
     <Version>1.0.0-1.preview</Version>
-    
+    <Deterministic>true</Deterministic>
+
     <IsPackable>true</IsPackable>
-    <PackageId>EmbedResouceCSharp.Generator</PackageId>
+    <PackageId>EmbedResourceCSharp.Generator</PackageId>
     <Title>EmbedResourceCSharp C# Source Generator</Title>
     <Description>SourceGenerator for resource file embedding with EmbedResourceCSharp.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
     <Authors>pCYSl5EDgo</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>SourceGenerator</PackageTags>
@@ -21,11 +23,19 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0-5.final" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0-5.final" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="../EmbedResourceCSharp.Attribute/PathSeparator.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <!-- Package the generator in the analyzer directory of the nuget package -->
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+
+    <!-- Package the props file -->
+    <None Include="EmbedResourceCSharp.Generator.props" Pack="true" PackagePath="build" Visible="false" />
   </ItemGroup>
 
 </Project>
