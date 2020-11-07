@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Version>1.0.0-1.preview</Version>
     
     <IsPackable>true</IsPackable>
     <PackageId>EmbedResouceCSharp.Generator</PackageId>
