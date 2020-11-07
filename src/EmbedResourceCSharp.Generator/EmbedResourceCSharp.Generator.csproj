@@ -11,6 +11,7 @@
     <Authors>pCYSl5EDgo</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>SourceGenerator</PackageTags>
+    <RepositoryUrl>https://github.com/pCYSl5EDgo/EmbeddingResourceCSharp</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

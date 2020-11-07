@@ -14,6 +14,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>pCYSl5EDgo</Authors>
     <PackageTags>SourceGenerator</PackageTags>
+    <RepositoryUrl>https://github.com/pCYSl5EDgo/EmbeddingResourceCSharp</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
