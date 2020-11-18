@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EmbedResourceCSharp.Generator" Version="1.0.0-1.preview" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="EmbedResourceCSharp.Generator" Version="1.0.0" />
     <PackageReference Include="EmbedResourceCSharp.Attribute" Version="1.0.0" />
     <!-- <ProjectReference Include="..\..\src\EmbedResourceCSharp.Generator\EmbedResourceCSharp.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\EmbedResourceCSharp.Attribute\EmbedResourceCSharp.Attribute.csproj" /> -->
