@@ -2,5 +2,6 @@
 <Project>
   <ItemGroup>
     <CompilerVisibleProperty Include="ProjectDir" />
+    <CompilerVisibleProperty Include="DesignTimeBuild" />
   </ItemGroup>
 </Project>

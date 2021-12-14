@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using EmbedResourceCSharp;
@@ -24,9 +24,15 @@ namespace FileTests
         }
 
         [Fact]
+        public void FileNotFoundTest()
+        {
+            Assert.Throws<FileNotFoundException>(() => GetB("b.cs"));
+        }
+
+        [Fact]
         public void FolderFileEmbedTest()
         {
-            const string path = "EmbedResourceCSharp.Generator/SyntaxReceiver.cs";
+            const string path = "EmbedResourceCSharp.Generator/Generator.cs";
             var original = File.ReadAllBytes(Path.Combine(currentFolder, "../../src/" + path));
             Assert.True(GetB(path).SequenceEqual(original.AsSpan()));
         }

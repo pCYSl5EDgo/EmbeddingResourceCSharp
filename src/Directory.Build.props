@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <OutputType>library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Version>1.1.0</Version>
+    <Deterministic>true</Deterministic>
+    <Nullable>enable</Nullable>
+    <Authors>pCYSl5EDgo</Authors>
+    <Copyright>pCYSl5EDgo</Copyright>
+    <RepositoryUrl>https://github.com/pCYSl5EDgo/EmbeddingResourceCSharp</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+</Project>

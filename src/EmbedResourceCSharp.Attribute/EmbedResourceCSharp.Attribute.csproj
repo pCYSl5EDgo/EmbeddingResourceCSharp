@@ -1,20 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>9.0</LangVersion>
-    <Version>1.0.0</Version>
-    <Nullable>enable</Nullable>
-    <Deterministic>true</Deterministic>
-
     <IsPackable>true</IsPackable>
     <PackageId>EmbedResourceCSharp.Attribute</PackageId>
     <Title>EmbedResourceCSharp Attribute</Title>
     <Description>Attributes for resource file embedding with EmbedResourceCSharp.</Description>
-    <Copyright>pCYSl5EDgo</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>pCYSl5EDgo</Authors>
     <PackageTags>SourceGenerator</PackageTags>
     <RepositoryUrl>https://github.com/pCYSl5EDgo/EmbeddingResourceCSharp</RepositoryUrl>
   </PropertyGroup>

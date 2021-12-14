@@ -1,9 +1,8 @@
-namespace EmbedResourceCSharp
+﻿namespace EmbedResourceCSharp;
+
+public enum PathSeparator
 {
-    public enum PathSeparator
-    {
-        AsIs,
-        Slash,
-        BackSlash,
-    }
+    AsIs,
+    Slash,
+    BackSlash,
 }
