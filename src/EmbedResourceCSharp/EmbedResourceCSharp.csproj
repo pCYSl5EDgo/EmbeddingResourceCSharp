@@ -1,12 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RoslynVersion>4</RoslynVersion>
     <IsRoslynComponent>true</IsRoslynComponent>
     <DevelopmentDependency>true</DevelopmentDependency>
 
     <IsPackable>true</IsPackable>
-    <PackageId>EmbedResourceCSharp.Generator</PackageId>
+    <PackageId>EmbedResourceCSharp</PackageId>
     <Title>EmbedResourceCSharp C# Source Generator</Title>
     <Description>SourceGenerator for resource file embedding with EmbedResourceCSharp.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -24,16 +23,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="../EmbedResourceCSharp.Attribute/PathSeparator.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
 
     <!-- Package the props file -->
-    <Content Include="build\EmbedResourceCSharp.Generator.props" Pack="true" PackagePath="build" />
+    <Content Include="build\EmbedResourceCSharp.props" Pack="true" PackagePath="build" />
   </ItemGroup>
 
 </Project>

@@ -32,7 +32,7 @@ namespace FileTests
         [Fact]
         public void FolderFileEmbedTest()
         {
-            const string path = "EmbedResourceCSharp.Generator/Generator.cs";
+            const string path = "EmbedResourceCSharp/Generator.cs";
             var original = File.ReadAllBytes(Path.Combine(currentFolder, "../../src/" + path));
             Assert.True(GetB(path).SequenceEqual(original.AsSpan()));
         }
