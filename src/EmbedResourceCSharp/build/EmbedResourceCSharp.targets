@@ -1,0 +1,14 @@
+<Project>
+  <!-- https://github.com/dotnet/sdk/issues/20355 -->
+  <!-- https://www.slideshare.net/odashinsuke/ms-build -->
+  <Target Name="_EmbedResourceCSharpMultiTargetRoslyn3" Condition="'$(SupportsRoslynComponentVersioning)' != 'true'" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('EmbedResourceCSharp.dll')) &gt;= 0"/>
+    </ItemGroup>
+  </Target>
+  <Target Name="_EmbedResourceCSharpMultiTargetRoslyn4" Condition="'$(SupportsRoslynComponentVersioning)' == 'true'" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(Analyzer.Identity)').IndexOf('EmbedResourceCSharp.Roslyn3.dll')) &gt;= 0"/>
+    </ItemGroup>
+  </Target>
+</Project>

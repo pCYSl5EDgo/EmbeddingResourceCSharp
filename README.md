@@ -9,11 +9,10 @@ You do not need to use `Assembly.GetManifestResourceStream` anymore.
 ## Install
 
 ```sh
-dotnet add package EmbedResourceCSharp.Attribute
-dotnet add package EmbedResourceCSharp.Generator
+dotnet add package EmbedResourceCSharp
 ```
 
-Add 2 packages to your C# project.
+Add only 1 package to your C# project.
 
 ## Embedding file
 

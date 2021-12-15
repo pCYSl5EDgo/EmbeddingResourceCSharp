@@ -3,7 +3,6 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace EmbedResourceCSharp;
 
@@ -14,7 +13,7 @@ public sealed class Generator : IIncrementalGenerator
     {
         context.RegisterPostInitializationOutput(GenerateInitialCode);
         var options = context.AnalyzerConfigOptionsProvider
-            .Select(SelectOptions)
+            .Select(Utility.SelectOptions)
             .WithComparer(Options.Comparer.Instance);
         var types = context.CompilationProvider
             .Select(SelectExtractionTypes)
@@ -91,7 +90,7 @@ public sealed class Generator : IIncrementalGenerator
         if (pair.Options.IsDesignTimeBuild)
         {
             builder = new StringBuilder();
-            Utility.ProcessFolderDesignTimeBuild(ref builder, method);
+            Utility.ProcessFolderDesignTimeBuild(builder, method);
             goto SUCCESS;
         }
 
@@ -124,12 +123,13 @@ SUCCESS:
     {
         StringBuilder builder;
 
-        context.CancellationToken.ThrowIfCancellationRequested();
+        var token = context.CancellationToken;
+        token.ThrowIfCancellationRequested();
         var method = pair.Left.Method;
         if (pair.Options.IsDesignTimeBuild)
         {
             builder = new StringBuilder();
-            Utility.ProcessFileDesignTimeBuild(ref builder, method);
+            Utility.ProcessFileDesignTimeBuild(builder, method);
             goto SUCCESS;
         }
 
@@ -140,7 +140,7 @@ SUCCESS:
         }
 
         builder = new StringBuilder();
-        var exists = Utility.ProcessFile(builder, pair.Options.ProjectDirectory, extract, context.CancellationToken);
+        var exists = Utility.ProcessFile(builder, pair.Options.ProjectDirectory, extract, token);
         if (!exists)
         {
             var location = Location.None;
@@ -223,59 +223,9 @@ SUCCESS:
         return false;
     }
 
-    private Options SelectOptions(AnalyzerConfigOptionsProvider provider, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        var isDesignTimeBuild = provider.GlobalOptions.TryGetValue("build_property.DesignTimeBuild", out var designTimeBuild) && designTimeBuild == "true";
-        if (!provider.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDirectory) || projectDirectory is null)
-        {
-            isDesignTimeBuild = true;
-            projectDirectory = "";
-        }
-
-        return new(isDesignTimeBuild, projectDirectory);
-    }
-
     private void GenerateInitialCode(IncrementalGeneratorPostInitializationContext context)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
-        context.AddSource("Attribute.cs", @"namespace EmbedResourceCSharp
-{
-    internal enum PathSeparator
-    {
-        AsIs,
-        Slash,
-        BackSlash,
-    }
-
-    [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = false)]
-    internal sealed class FileEmbedAttribute : global::System.Attribute
-    {
-        public string Path { get; }
-
-        public FileEmbedAttribute(string path)
-        {
-            Path = path;
-        }
-    }
-
-    [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = false)]
-    internal sealed class FolderEmbedAttribute : global::System.Attribute
-    {
-        public string Path { get; private set; }
-        public string Filter { get; private set; }
-        public global::System.IO.SearchOption Option { get; private set; }
-        public PathSeparator Separator { get; private set; }
-
-        public FolderEmbedAttribute(string path, string filter = ""*"", global::System.IO.SearchOption option = global::System.IO.SearchOption.AllDirectories, PathSeparator separator = PathSeparator.Slash)
-        {
-            Path = path;
-            Filter = filter;
-            Option = option;
-            Separator = separator;
-        }
-    }
-}
-");
+        context.AddSource("Attribute.cs", Utility.AttributeCs);
     }
 }

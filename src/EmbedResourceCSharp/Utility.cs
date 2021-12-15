@@ -3,12 +3,66 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace EmbedResourceCSharp;
 
 internal static partial class Utility
 {
+    public const string AttributeCs = @"namespace EmbedResourceCSharp
+{
+    internal enum PathSeparator
+    {
+        AsIs,
+        Slash,
+        BackSlash,
+    }
+
+    [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = false)]
+    internal sealed class FileEmbedAttribute : global::System.Attribute
+    {
+        public string Path { get; }
+
+        public FileEmbedAttribute(string path)
+        {
+            Path = path;
+        }
+    }
+
+    [global::System.AttributeUsage(global::System.AttributeTargets.Method, AllowMultiple = false)]
+    internal sealed class FolderEmbedAttribute : global::System.Attribute
+    {
+        public string Path { get; private set; }
+        public string Filter { get; private set; }
+        public global::System.IO.SearchOption Option { get; private set; }
+        public PathSeparator Separator { get; private set; }
+
+        public FolderEmbedAttribute(string path, string filter = ""*"", global::System.IO.SearchOption option = global::System.IO.SearchOption.AllDirectories, PathSeparator separator = PathSeparator.Slash)
+        {
+            Path = path;
+            Filter = filter;
+            Option = option;
+            Separator = separator;
+        }
+    }
+}
+";
+
+    public static Options SelectOptions(AnalyzerConfigOptionsProvider provider, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var isDesignTimeBuild = provider.GlobalOptions.TryGetValue("build_property.DesignTimeBuild", out var designTimeBuild) && designTimeBuild == "true";
+        if (!provider.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDirectory) || projectDirectory is null)
+        {
+            isDesignTimeBuild = true;
+            projectDirectory = "";
+        }
+
+        return new(isDesignTimeBuild, projectDirectory);
+    }
+
     public static string CalcHintName(StringBuilder builder, IMethodSymbol method, string suffix)
     {
         return builder.Clear()
@@ -309,7 +363,7 @@ internal static partial class Utility
         return true;
     }
 
-    public static void ProcessFolderDesignTimeBuild(ref StringBuilder buffer, IMethodSymbol method)
+    public static void ProcessFolderDesignTimeBuild(StringBuilder buffer, IMethodSymbol method)
     {
         Header(buffer, method);
         buffer.Append("(global::System.ReadOnlySpan<char> ");
@@ -325,7 +379,7 @@ internal static partial class Utility
         Footer(buffer);
     }
 
-    public static void ProcessFileDesignTimeBuild(ref StringBuilder buffer, IMethodSymbol method)
+    public static void ProcessFileDesignTimeBuild(StringBuilder buffer, IMethodSymbol method)
     {
         Header(buffer, method);
         buffer.Append("()");
