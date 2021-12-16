@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <IsRoslynComponent>true</IsRoslynComponent>
     <DevelopmentDependency>true</DevelopmentDependency>
-
     <IsPackable>true</IsPackable>
     <PackageId>EmbedResourceCSharp</PackageId>
     <Title>EmbedResourceCSharp C# Source Generator</Title>
@@ -15,16 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-        <ProjectReference Include="../EmbedResourceCSharp.Roslyn3/EmbedResourceCSharp.Roslyn3.csproj" ReferenceOutputAssembly="false" />
-    </ItemGroup>
+    <ProjectReference Include="../EmbedResourceCSharp.Roslyn3/EmbedResourceCSharp.Roslyn3.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->
@@ -45,5 +38,4 @@
       <None Include="%(Roslyn3Assembly.Identity)" Pack="true" PackagePath="analyzers/dotnet/roslyn3.11" Visible="false" />
     </ItemGroup>
   </Target>
-
 </Project>

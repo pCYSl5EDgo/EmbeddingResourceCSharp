@@ -20,8 +20,7 @@ public sealed class Generator : ISourceGenerator
             var file = types.FileEmbedAttributeTypeSymbol;
             foreach (var candidate in receiver.FileCandidates)
             {
-                var method = compilation.GetSemanticModel(candidate.SyntaxTree).GetDeclaredSymbol(candidate, token) as IMethodSymbol;
-                if (method is null)
+                if (compilation.GetSemanticModel(candidate.SyntaxTree).GetDeclaredSymbol(candidate, token) is not IMethodSymbol method)
                 {
                     continue;
                 }
@@ -48,7 +47,7 @@ FOUND:
 
                 if (!Utility.ExtractFile(method, attribute, out var extract))
                 {
-                    return;
+                    continue;
                 }
 
                 var exists = Utility.ProcessFile(builder.Clear(), options.ProjectDirectory, extract, token);
@@ -61,7 +60,7 @@ FOUND:
                     }
 
                     context.ReportDiagnostic(Diagnostic.Create(DiagnosticsHelper.FileNotFoundError, location, extract.Path));
-                    return;
+                    continue;
                 }
 
 SUCCESS:
@@ -72,11 +71,10 @@ SUCCESS:
         }
 
         {
-            var folder = types.FileEmbedAttributeTypeSymbol;
+            var folder = types.FolderEmbedAttributeTypeSymbol;
             foreach (var candidate in receiver.FolderCandidates)
             {
-                var method = compilation.GetSemanticModel(candidate.SyntaxTree).GetDeclaredSymbol(candidate, token) as IMethodSymbol;
-                if (method is null)
+                if (compilation.GetSemanticModel(candidate.SyntaxTree).GetDeclaredSymbol(candidate, token) is not IMethodSymbol method)
                 {
                     continue;
                 }
@@ -103,7 +101,7 @@ FOUND:
 
                 if (!Utility.ExtractFolder(method, attribute, out var extract))
                 {
-                    return;
+                    continue;
                 }
 
                 var exists = Utility.ProcessFolder(builder.Clear(), options.ProjectDirectory, extract, token);
@@ -116,12 +114,12 @@ FOUND:
                     }
 
                     context.ReportDiagnostic(Diagnostic.Create(DiagnosticsHelper.FolderNotFoundError, location, extract.Path));
-                    return;
+                    continue;
                 }
 
 SUCCESS:
                 var source = builder.ToString();
-                var hintName = Utility.CalcHintName(builder, method, ".file.g.cs");
+                var hintName = Utility.CalcHintName(builder, method, ".folder.g.cs");
                 context.AddSource(hintName, source);
             }
         }

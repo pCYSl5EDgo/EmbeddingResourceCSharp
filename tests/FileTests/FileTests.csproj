@@ -1,15 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>10</LangVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<PackageReference Include="EmbedResourceCSharp.Generator" Version="1.0.0" />-->
-    <!--<PackageReference Include="EmbedResourceCSharp.Attribute" Version="1.0.0" />--> 
-    <ProjectReference Include="..\..\src\EmbedResourceCSharp\EmbedResourceCSharp.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\EmbedResourceCSharp.Roslyn3\EmbedResourceCSharp.Roslyn3.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <!-- <PackageReference Include="EmbedResourceCSharp" Version="1.1.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>  -->
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
