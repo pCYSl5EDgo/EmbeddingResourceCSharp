@@ -19,6 +19,11 @@ jobs:
           6.0.x
     - name: Build
       run: dotnet build -c Release
+    - uses: actions/upload-artifact@v2
+      with:
+        name: nupkg
+        path: src/EmbedResourceCSharp/bin/Release/EmbedResourceCSharp.*.nupkg
+
   test:
     runs-on: ubuntu-latest
 
