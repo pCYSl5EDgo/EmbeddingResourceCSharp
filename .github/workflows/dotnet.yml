@@ -26,7 +26,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
@@ -34,6 +33,7 @@ jobs:
       with:
         dotnet-version: | 
           5.0.x
+          6.0.x
     - name: Test v3
       run: |
         cd tests/FileTests
@@ -42,3 +42,17 @@ jobs:
       run: |
         cd tests/FileTests
         dotnet test --verbosity normal --environment TestingVariable="4"
+
+  test2:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: | 
+          5.0.x
+    - name: Test
+      run: |
+        cd tests/FileTests
+        dotnet test --verbosity normal

@@ -211,23 +211,16 @@ internal static partial class Utility
         buffer.AppendLine();
     }
 
-    public static bool ProcessFile(StringBuilder buffer, string rootFolderPath, in FileExtraction file, System.Threading.CancellationToken cancellationToken)
+    public static void ProcessFile(StringBuilder buffer, IMethodSymbol method, string filePath, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var filePath = Path.Combine(rootFolderPath, file.Path);
-        if (!File.Exists(filePath))
-        {
-            return false;
-        }
-
-        Header(buffer, file.Method);
+        Header(buffer, method);
         buffer.Append("()").AppendLine();
         buffer.Append("        {").AppendLine();
         buffer.Append("            return ");
         EmbedArray(buffer, File.ReadAllBytes(filePath), cancellationToken);
         buffer.Append("        }");
         Footer(buffer);
-        return true;
     }
 
     private static void Footer(StringBuilder buffer)
@@ -294,18 +287,6 @@ internal static partial class Utility
         }
     }
 
-    public readonly struct FileExtraction
-    {
-        public readonly IMethodSymbol Method;
-        public readonly string Path;
-
-        public FileExtraction(IMethodSymbol method, string path)
-        {
-            Method = method;
-            Path = path;
-        }
-    }
-
     public readonly struct FolderExtraction
     {
         public readonly IMethodSymbol Method;
@@ -347,19 +328,6 @@ internal static partial class Utility
         }
 
         extraction = new(method, path, filter, (SearchOption)option, (PathSeparator)separator);
-        return true;
-    }
-
-    public static bool ExtractFile(IMethodSymbol method, AttributeData attributeData, out FileExtraction extraction)
-    {
-        if (method.Parameters.Length != 0
-            || attributeData.ConstructorArguments[0].Value is not string path)
-        {
-            Unsafe.SkipInit(out extraction);
-            return false;
-        }
-
-        extraction = new(method, path);
         return true;
     }
 

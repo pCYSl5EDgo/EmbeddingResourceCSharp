@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using Microsoft.CodeAnalysis;
 
@@ -40,19 +41,13 @@ public sealed class Generator : ISourceGenerator
 
                 continue;
 FOUND:
-                if (options.IsDesignTimeBuild)
-                {
-                    Utility.ProcessFileDesignTimeBuild(builder.Clear(), method);
-                    goto SUCCESS;
-                }
-
-                if (!Utility.ExtractFile(method, attribute, out var extract))
+                if (attribute.ConstructorArguments[0].Value is not string path)
                 {
                     continue;
                 }
 
-                var exists = Utility.ProcessFile(builder.Clear(), options.ProjectDirectory, extract, token);
-                if (!exists)
+                var filePath = Path.Combine(options.ProjectDirectory, path);
+                if (!File.Exists(filePath))
                 {
                     var location = Location.None;
                     if (method.AssociatedSymbol is { Locations: { Length: > 0 } locations })
@@ -60,11 +55,20 @@ FOUND:
                         location = locations[0];
                     }
 
-                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticsHelper.FileNotFoundError, location, extract.Path));
+                    context.ReportDiagnostic(Diagnostic.Create(DiagnosticsHelper.FileNotFoundError, location, filePath));
                     continue;
                 }
 
-SUCCESS:
+                builder.Clear();
+                if (options.IsDesignTimeBuild)
+                {
+                    Utility.ProcessFileDesignTimeBuild(builder, method);
+                }
+                else
+                {
+                    Utility.ProcessFile(builder, method, filePath, token);
+                }
+
                 var source = builder.ToString();
                 var hintName = Utility.CalcHintName(builder, method, ".file.g.cs");
                 context.AddSource(hintName, source);

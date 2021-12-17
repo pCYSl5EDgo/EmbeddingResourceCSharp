@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -26,7 +27,8 @@ public sealed class Generator : IIncrementalGenerator
             })
             .WithComparer(SymbolEqualityComparer.Default);
         var folder = context.CompilationProvider
-            .Select(static (compilation, token) => {
+            .Select(static (compilation, token) =>
+            {
                 token.ThrowIfCancellationRequested();
                 return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found");
             })
@@ -34,8 +36,8 @@ public sealed class Generator : IIncrementalGenerator
         var files = context.SyntaxProvider
             .CreateSyntaxProvider(Predicate, Transform)
             .Combine(file)
-            .Select(PostTransform)
-            .Where(x => x.Method is not null)!
+            .Select(PostTransformFile)
+            .Where(x => x.Method is not null && x.Data is not null)!
             .WithComparer(FileAttributeComparer.Instance);
         var folders = context.SyntaxProvider
             .CreateSyntaxProvider(Predicate, Transform)
@@ -65,6 +67,26 @@ public sealed class Generator : IIncrementalGenerator
         var syntax = (context.Node as MethodDeclarationSyntax)!;
         var symbol = context.SemanticModel.GetDeclaredSymbol(syntax, token);
         return symbol;
+    }
+
+    private (IMethodSymbol? Method, string? Data) PostTransformFile((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
+    {
+        var method = pair.Method;
+        if (method is null)
+        {
+            return default;
+        }
+
+        foreach (var attribute in method.GetAttributes())
+        {
+            token.ThrowIfCancellationRequested();
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, pair.Type))
+            {
+                return (method, attribute.ConstructorArguments[0].Value as string);
+            }
+        }
+
+        return default;
     }
 
     private (IMethodSymbol? Method, AttributeData? Data) PostTransform((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
@@ -126,29 +148,17 @@ SUCCESS:
         context.AddSource(hintName, source);
     }
 
-    private void GenerateFileEmbed(SourceProductionContext context, ((IMethodSymbol Method, AttributeData Data) Left, Options Options) pair)
+    private void GenerateFileEmbed(SourceProductionContext context, ((IMethodSymbol Method, string Path) Left, Options Options) pair)
     {
         StringBuilder builder;
 
         var token = context.CancellationToken;
         token.ThrowIfCancellationRequested();
         var method = pair.Left.Method;
-        if (pair.Options.IsDesignTimeBuild)
-        {
-            builder = new StringBuilder();
-            Utility.ProcessFileDesignTimeBuild(builder, method);
-            goto SUCCESS;
-        }
+        var path = pair.Left.Path;
 
-        var attribute = pair.Left.Data;
-        if (!Utility.ExtractFile(method, attribute, out var extract))
-        {
-            return;
-        }
-
-        builder = new StringBuilder();
-        var exists = Utility.ProcessFile(builder, pair.Options.ProjectDirectory, extract, token);
-        if (!exists)
+        var filePath = Path.Combine(pair.Options.ProjectDirectory, path);
+        if (!File.Exists(filePath))
         {
             var location = Location.None;
             if (method.AssociatedSymbol is { Locations: { Length: > 0 } locations })
@@ -156,32 +166,31 @@ SUCCESS:
                 location = locations[0];
             }
 
-            context.ReportDiagnostic(Diagnostic.Create(DiagnosticsHelper.FileNotFoundError, location, extract.Path));
+            context.ReportDiagnostic(Diagnostic.Create(DiagnosticsHelper.FileNotFoundError, location, filePath));
             return;
         }
 
-SUCCESS:
+        builder = new StringBuilder();
+        if (pair.Options.IsDesignTimeBuild)
+        {
+            Utility.ProcessFileDesignTimeBuild(builder, method);
+        }
+        else
+        {
+            Utility.ProcessFile(builder, method, filePath, token);
+        }
+
         var source = builder.ToString();
         var hintName = Utility.CalcHintName(builder, method, ".file.g.cs");
         context.AddSource(hintName, source);
     }
 
-    private sealed class FileAttributeComparer : IEqualityComparer<ValueTuple<IMethodSymbol, AttributeData>>
+    private sealed class FileAttributeComparer : IEqualityComparer<ValueTuple<IMethodSymbol, string>>
     {
         public static readonly FileAttributeComparer Instance = new();
 
-        public bool Equals((IMethodSymbol, AttributeData) x, (IMethodSymbol, AttributeData) y)
-        {
-            if (!SymbolEqualityComparer.Default.Equals(x.Item1, y.Item1))
-            {
-                return false;
-            }
+        public bool Equals((IMethodSymbol, string) x, (IMethodSymbol, string) y) => x.Item2.Equals(y.Item2) && SymbolEqualityComparer.Default.Equals(x.Item1, y.Item1);
 
-            var xArgument = x.Item2.ConstructorArguments[0];
-            var yArgument = y.Item2.ConstructorArguments[0];
-            return (xArgument.Value as string)!.Equals(yArgument.Value as string);
-        }
-
-        public int GetHashCode((IMethodSymbol, AttributeData) obj) => SymbolEqualityComparer.Default.GetHashCode(obj.Item1);
+        public int GetHashCode((IMethodSymbol, string) obj) => SymbolEqualityComparer.Default.GetHashCode(obj.Item1);
     }
 }
