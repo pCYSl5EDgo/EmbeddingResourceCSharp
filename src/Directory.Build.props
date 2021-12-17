@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsRoslynComponent>true</IsRoslynComponent>
     <LangVersion>10</LangVersion>
-    <Version>1.1.2</Version>
+    <Version>1.1.3</Version>
     <Deterministic>true</Deterministic>
     <Nullable>enable</Nullable>
     <Authors>pCYSl5EDgo</Authors>

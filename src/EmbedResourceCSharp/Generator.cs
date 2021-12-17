@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -27,14 +28,15 @@ public sealed class Generator : IIncrementalGenerator
             .CreateSyntaxProvider(Predicate, Transform)
             .Combine(file)
             .Select(PostTransform)
-            .Where(x => x.Method is not null);
+            .Where(x => x.Method is not null)!
+            .WithComparer(FileAttributeComparer.Instance);
         var folders = context.SyntaxProvider
             .CreateSyntaxProvider(Predicate, Transform)
             .Combine(folder)
             .Select(PostTransform)
             .Where(x => x.Method is not null);
 
-        context.RegisterSourceOutput(files.Combine(options), GenerateFileEmbed!);
+        context.RegisterSourceOutput(files.Combine(options), GenerateFileEmbed);
         context.RegisterSourceOutput(folders.Combine(options), GenerateFolderEmbed!);
     }
 
@@ -155,5 +157,24 @@ SUCCESS:
         var source = builder.ToString();
         var hintName = Utility.CalcHintName(builder, method, ".file.g.cs");
         context.AddSource(hintName, source);
+    }
+
+    private sealed class FileAttributeComparer : IEqualityComparer<ValueTuple<IMethodSymbol, AttributeData>>
+    {
+        public static readonly FileAttributeComparer Instance = new();
+
+        public bool Equals((IMethodSymbol, AttributeData) x, (IMethodSymbol, AttributeData) y)
+        {
+            if (!SymbolEqualityComparer.Default.Equals(x.Item1, y.Item1))
+            {
+                return false;
+            }
+
+            var xArgument = x.Item2.ConstructorArguments[0];
+            var yArgument = y.Item2.ConstructorArguments[0];
+            return (xArgument.Value as string)!.Equals(yArgument.Value as string);
+        }
+
+        public int GetHashCode((IMethodSymbol, AttributeData) obj) => SymbolEqualityComparer.Default.GetHashCode(obj.Item1);
     }
 }
