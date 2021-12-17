@@ -19,10 +19,17 @@ public sealed class Generator : IIncrementalGenerator
             .Select(Utility.SelectOptions)
             .WithComparer(Options.Comparer.Instance);
         var file = context.CompilationProvider
-            .Select(static (compilation, _) => compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute") ?? throw new NullReferenceException("FileEmbedAttribute not found"))
+            .Select(static (compilation, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute") ?? throw new NullReferenceException("FileEmbedAttribute not found");
+            })
             .WithComparer(SymbolEqualityComparer.Default);
         var folder = context.CompilationProvider
-            .Select(static (compilation, _) => compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found"))
+            .Select(static (compilation, token) => {
+                token.ThrowIfCancellationRequested();
+                return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found");
+            })
             .WithComparer(SymbolEqualityComparer.Default);
         var files = context.SyntaxProvider
             .CreateSyntaxProvider(Predicate, Transform)
