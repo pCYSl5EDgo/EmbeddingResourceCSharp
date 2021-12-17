@@ -34,7 +34,11 @@ jobs:
       with:
         dotnet-version: | 
           5.0.x
-    - name: Test
+    - name: Test v3
       run: |
         cd tests/FileTests
-        dotnet test --verbosity normal
+        dotnet test --verbosity normal --environment TestingVariable="3"
+    - name: Test v4
+      run: |
+        cd tests/FileTests
+        dotnet test --verbosity normal --environment TestingVariable="4"
