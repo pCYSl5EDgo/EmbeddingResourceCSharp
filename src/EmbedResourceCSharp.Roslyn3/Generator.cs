@@ -13,11 +13,11 @@ public sealed class Generator : ISourceGenerator
         var receiver = (context.SyntaxReceiver as Receiver)!;
         var options = Utility.SelectOptions(context.AnalyzerConfigOptions, token);
         var compilation = context.Compilation;
-        var types = new TypeExtraction(compilation);
+        var file = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute") ?? throw new NullReferenceException("FileEmbedAttribute not found");
+        var folder = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found");
         var comparer = SymbolEqualityComparer.Default;
 
         {
-            var file = types.FileEmbedAttributeTypeSymbol;
             foreach (var candidate in receiver.FileCandidates)
             {
                 if (compilation.GetSemanticModel(candidate.SyntaxTree).GetDeclaredSymbol(candidate, token) is not IMethodSymbol method)
@@ -71,7 +71,6 @@ SUCCESS:
         }
 
         {
-            var folder = types.FolderEmbedAttributeTypeSymbol;
             foreach (var candidate in receiver.FolderCandidates)
             {
                 if (compilation.GetSemanticModel(candidate.SyntaxTree).GetDeclaredSymbol(candidate, token) is not IMethodSymbol method)
