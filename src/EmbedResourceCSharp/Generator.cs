@@ -37,7 +37,7 @@ public sealed class Generator : IIncrementalGenerator
             .CreateSyntaxProvider(Predicate, Transform)
             .Combine(file)
             .Select(PostTransformFile)
-            .Where(x => x.Method is not null && x.Data is not null)!
+            .Where(x => x.Method is not null && x.Path is not null)!
             .WithComparer(FileAttributeComparer.Instance);
         var folders = context.SyntaxProvider
             .CreateSyntaxProvider(Predicate, Transform)
@@ -69,7 +69,7 @@ public sealed class Generator : IIncrementalGenerator
         return symbol;
     }
 
-    private (IMethodSymbol? Method, string? Data) PostTransformFile((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
+    private (IMethodSymbol? Method, string? Path) PostTransformFile((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
     {
         var method = pair.Method;
         if (method is null)
