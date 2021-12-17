@@ -12,80 +12,77 @@ public sealed class Generator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(GenerateInitialCode);
+
         var options = context.AnalyzerConfigOptionsProvider
             .Select(Utility.SelectOptions)
             .WithComparer(Options.Comparer.Instance);
-        var types = context.CompilationProvider
-            .Select(SelectExtractionTypes)
-            .WithComparer(TypeExtraction.Comparer.Instance);
+        var file = context.CompilationProvider
+            .Select(static (compilation, _) => compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute") ?? throw new NullReferenceException("FileEmbedAttribute not found"))
+            .WithComparer(SymbolEqualityComparer.Default);
+        var folder = context.CompilationProvider
+            .Select(static (compilation, _) => compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found"))
+            .WithComparer(SymbolEqualityComparer.Default);
         var files = context.SyntaxProvider
-            .CreateSyntaxProvider(PredicateFile, Transform)
-            .Combine(types)
-            .Select(PostTransformFile)
+            .CreateSyntaxProvider(Predicate, Transform)
+            .Combine(file)
+            .Select(PostTransform)
             .Where(x => x.Method is not null);
         var folders = context.SyntaxProvider
-            .CreateSyntaxProvider(PredicateFolder, Transform)
-            .Combine(types)
-            .Select(PostTransformFolder)
+            .CreateSyntaxProvider(Predicate, Transform)
+            .Combine(folder)
+            .Select(PostTransform)
             .Where(x => x.Method is not null);
 
         context.RegisterSourceOutput(files.Combine(options), GenerateFileEmbed!);
         context.RegisterSourceOutput(folders.Combine(options), GenerateFolderEmbed!);
     }
 
-    private (IMethodSymbol? Method, AttributeData? Data) PostTransformFolder((IMethodSymbol? Method, TypeExtraction Types) pair, CancellationToken token)
+    private void GenerateInitialCode(IncrementalGeneratorPostInitializationContext context)
     {
-        var method = pair.Method;
-        if (method is null)
-        {
-            return default;
-        }
-
-        var folder = pair.Types.FolderEmbedAttributeTypeSymbol;
-        foreach (var attribute in method.GetAttributes())
-        {
-            token.ThrowIfCancellationRequested();
-            if (folder.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default))
-            {
-                return (method, attribute);
-            }
-        }
-
-        return default;
+        context.CancellationToken.ThrowIfCancellationRequested();
+        context.AddSource("Attribute.cs", Utility.AttributeCs);
     }
 
-    private (IMethodSymbol? Method, AttributeData? Data) PostTransformFile((IMethodSymbol? Method, TypeExtraction Types) pair, CancellationToken token)
-    {
-        var method = pair.Method;
-        if (method is null)
-        {
-            return default;
-        }
-
-        var file = pair.Types.FileEmbedAttributeTypeSymbol;
-        foreach (var attribute in method.GetAttributes())
-        {
-            token.ThrowIfCancellationRequested();
-            if (file.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default))
-            {
-                return (method, attribute);
-            }
-        }
-
-        return default;
-    }
-
-    private TypeExtraction SelectExtractionTypes(Compilation source, CancellationToken token)
+    private bool Predicate(SyntaxNode node, CancellationToken token)
     {
         token.ThrowIfCancellationRequested();
-        return new(source);
+        return node is MethodDeclarationSyntax { AttributeLists.Count: > 0 };
+    }
+
+    private IMethodSymbol? Transform(GeneratorSyntaxContext context, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        var syntax = (context.Node as MethodDeclarationSyntax)!;
+        var symbol = context.SemanticModel.GetDeclaredSymbol(syntax, token);
+        return symbol;
+    }
+
+    private (IMethodSymbol? Method, AttributeData? Data) PostTransform((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
+    {
+        var method = pair.Method;
+        if (method is null)
+        {
+            return default;
+        }
+
+        foreach (var attribute in method.GetAttributes())
+        {
+            token.ThrowIfCancellationRequested();
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, pair.Type))
+            {
+                return (method, attribute);
+            }
+        }
+
+        return default;
     }
 
     private void GenerateFolderEmbed(SourceProductionContext context, ((IMethodSymbol Method, AttributeData Data) Left, Options Options) pair)
     {
         StringBuilder builder;
 
-        context.CancellationToken.ThrowIfCancellationRequested();
+        var token = context.CancellationToken;
+        token.ThrowIfCancellationRequested();
         var method = pair.Left.Method;
         if (pair.Options.IsDesignTimeBuild)
         {
@@ -100,7 +97,7 @@ public sealed class Generator : IIncrementalGenerator
         }
 
         builder = new StringBuilder();
-        var exists = Utility.ProcessFolder(builder, pair.Options.ProjectDirectory, extract, context.CancellationToken);
+        var exists = Utility.ProcessFolder(builder, pair.Options.ProjectDirectory, extract, token);
         if (!exists)
         {
             var location = Location.None;
@@ -157,75 +154,5 @@ SUCCESS:
         var source = builder.ToString();
         var hintName = Utility.CalcHintName(builder, method, ".file.g.cs");
         context.AddSource(hintName, source);
-    }
-
-    private IMethodSymbol? Transform(GeneratorSyntaxContext context, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        var syntax = (context.Node as MethodDeclarationSyntax)!;
-        var symbol = context.SemanticModel.GetDeclaredSymbol(syntax, token);
-        return symbol;
-    }
-
-    private bool PredicateFile(SyntaxNode node, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        if (node is not MethodDeclarationSyntax { AttributeLists.Count: > 0 } declarationSyntax)
-        {
-            return false;
-        }
-
-        const string Embed = "FileEmbed";
-        const string EmbedAttribute = Embed + "Attribute";
-
-        foreach (var list in declarationSyntax.AttributeLists)
-        {
-            foreach (var attribute in list.Attributes)
-            {
-                token.ThrowIfCancellationRequested();
-                switch (attribute.Name)
-                {
-                    case SimpleNameSyntax simple when simple.Identifier.Text is Embed or EmbedAttribute:
-                    case QualifiedNameSyntax qualified when qualified.Right.Identifier.Text is Embed or EmbedAttribute:
-                        return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private bool PredicateFolder(SyntaxNode node, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        if (node is not MethodDeclarationSyntax { AttributeLists.Count: > 0 } declarationSyntax)
-        {
-            return false;
-        }
-
-        const string Embed = "FolderEmbed";
-        const string EmbedAttribute = Embed + "Attribute";
-
-        foreach (var list in declarationSyntax.AttributeLists)
-        {
-            foreach (var attribute in list.Attributes)
-            {
-                token.ThrowIfCancellationRequested();
-                switch (attribute.Name)
-                {
-                    case SimpleNameSyntax simple when simple.Identifier.Text is Embed or EmbedAttribute:
-                    case QualifiedNameSyntax qualified when qualified.Right.Identifier.Text is Embed or EmbedAttribute:
-                        return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private void GenerateInitialCode(IncrementalGeneratorPostInitializationContext context)
-    {
-        context.CancellationToken.ThrowIfCancellationRequested();
-        context.AddSource("Attribute.cs", Utility.AttributeCs);
     }
 }
