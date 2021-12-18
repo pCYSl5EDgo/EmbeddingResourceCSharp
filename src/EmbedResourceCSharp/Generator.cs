@@ -23,14 +23,14 @@ public sealed class Generator : IIncrementalGenerator
             .Select(static (compilation, token) =>
             {
                 token.ThrowIfCancellationRequested();
-                return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute") ?? throw new NullReferenceException("FileEmbedAttribute not found");
+                return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute");
             })
             .WithComparer(SymbolEqualityComparer.Default);
         var folder = context.CompilationProvider
             .Select(static (compilation, token) =>
             {
                 token.ThrowIfCancellationRequested();
-                return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found");
+                return compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute");
             })
             .WithComparer(SymbolEqualityComparer.Default);
         var files = context.SyntaxProvider
@@ -69,8 +69,14 @@ public sealed class Generator : IIncrementalGenerator
         return symbol;
     }
 
-    private (IMethodSymbol? Method, string? Path) PostTransformFile((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
+    private (IMethodSymbol? Method, string? Path) PostTransformFile((IMethodSymbol? Method, INamedTypeSymbol? Type) pair, CancellationToken token)
     {
+        var type = pair.Type;
+        if (type is null)
+        {
+            return default;
+        }
+
         var method = pair.Method;
         if (method is null)
         {
@@ -80,7 +86,7 @@ public sealed class Generator : IIncrementalGenerator
         foreach (var attribute in method.GetAttributes())
         {
             token.ThrowIfCancellationRequested();
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, pair.Type))
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, type))
             {
                 return (method, attribute.ConstructorArguments[0].Value as string);
             }
@@ -89,8 +95,14 @@ public sealed class Generator : IIncrementalGenerator
         return default;
     }
 
-    private (IMethodSymbol? Method, AttributeData? Data) PostTransform((IMethodSymbol? Method, INamedTypeSymbol Type) pair, CancellationToken token)
+    private (IMethodSymbol? Method, AttributeData? Data) PostTransform((IMethodSymbol? Method, INamedTypeSymbol? Type) pair, CancellationToken token)
     {
+        var type = pair.Type;
+        if (type is null)
+        {
+            return default;
+        }
+
         var method = pair.Method;
         if (method is null)
         {
@@ -100,7 +112,7 @@ public sealed class Generator : IIncrementalGenerator
         foreach (var attribute in method.GetAttributes())
         {
             token.ThrowIfCancellationRequested();
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, pair.Type))
+            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, type))
             {
                 return (method, attribute);
             }

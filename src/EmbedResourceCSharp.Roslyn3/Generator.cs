@@ -15,8 +15,13 @@ public sealed class Generator : ISourceGenerator
         var receiver = (context.SyntaxReceiver as Receiver)!;
         var options = Utility.SelectOptions(context.AnalyzerConfigOptions, token);
         var compilation = context.Compilation;
-        var file = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute") ?? throw new NullReferenceException("FileEmbedAttribute not found");
-        var folder = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute") ?? throw new NullReferenceException("FolderEmbedAttribute not found");
+        var file = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute");
+        var folder = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute");
+        if (file is null || folder is null)
+        {
+            return;
+        }
+
         var comparer = SymbolEqualityComparer.Default;
 
         {
