@@ -13,7 +13,12 @@ public sealed class Generator : ISourceGenerator
         var builder = new StringBuilder();
         var token = context.CancellationToken;
         var receiver = (context.SyntaxReceiver as Receiver)!;
-        var options = Utility.SelectOptions(context.AnalyzerConfigOptions, token);
+        var options = new Options(context.AnalyzerConfigOptions.GlobalOptions);
+        if (string.IsNullOrWhiteSpace(options.ProjectDir))
+        {
+            return;
+        }
+
         var compilation = context.Compilation;
         var file = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FileEmbedAttribute");
         var folder = compilation.GetTypeByMetadataName("EmbedResourceCSharp.FolderEmbedAttribute");
@@ -51,7 +56,7 @@ FOUND:
                     continue;
                 }
 
-                var filePath = Path.Combine(options.ProjectDirectory, path);
+                var filePath = Path.Combine(options.ProjectDir, path);
                 if (!File.Exists(filePath))
                 {
                     var location = Location.None;
@@ -113,7 +118,7 @@ FOUND:
                     continue;
                 }
 
-                var exists = Utility.ProcessFolder(builder.Clear(), options.ProjectDirectory, extract, token);
+                var exists = Utility.ProcessFolder(builder.Clear(), options.ProjectDir!, extract, token);
                 if (!exists)
                 {
                     var location = Location.None;

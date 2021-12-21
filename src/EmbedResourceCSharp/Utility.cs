@@ -50,19 +50,6 @@ internal static partial class Utility
 }
 ";
 
-    public static Options SelectOptions(AnalyzerConfigOptionsProvider provider, CancellationToken token)
-    {
-        token.ThrowIfCancellationRequested();
-        var isDesignTimeBuild = provider.GlobalOptions.TryGetValue("build_property.DesignTimeBuild", out var designTimeBuild) && designTimeBuild == "true";
-        if (!provider.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDirectory) || projectDirectory is null)
-        {
-            isDesignTimeBuild = true;
-            projectDirectory = "";
-        }
-
-        return new(isDesignTimeBuild, projectDirectory);
-    }
-
     public static string CalcHintName(StringBuilder builder, IMethodSymbol method, string suffix)
     {
         return builder.Clear()

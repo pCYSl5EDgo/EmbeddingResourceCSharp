@@ -17,8 +17,8 @@ public sealed class Generator : IIncrementalGenerator
         context.RegisterPostInitializationOutput(GenerateInitialCode);
 
         var options = context.AnalyzerConfigOptionsProvider
-            .Select(Utility.SelectOptions)
-            .WithComparer(Options.Comparer.Instance);
+            .Select(Options.Select)
+            .WithComparer(EqualityComparer<Options>.Default);
         var file = context.CompilationProvider
             .Select(static (compilation, token) =>
             {
@@ -123,6 +123,11 @@ public sealed class Generator : IIncrementalGenerator
 
     private void GenerateFolderEmbed(SourceProductionContext context, ((IMethodSymbol Method, AttributeData Data) Left, Options Options) pair)
     {
+        if (string.IsNullOrWhiteSpace(pair.Options.ProjectDir))
+        {
+            return;
+        }
+
         StringBuilder builder;
 
         var token = context.CancellationToken;
@@ -141,7 +146,7 @@ public sealed class Generator : IIncrementalGenerator
         }
 
         builder = new StringBuilder();
-        var exists = Utility.ProcessFolder(builder, pair.Options.ProjectDirectory, extract, token);
+        var exists = Utility.ProcessFolder(builder, pair.Options.ProjectDir!, extract, token);
         if (!exists)
         {
             var location = Location.None;
@@ -162,6 +167,11 @@ SUCCESS:
 
     private void GenerateFileEmbed(SourceProductionContext context, ((IMethodSymbol Method, string Path) Left, Options Options) pair)
     {
+        if (string.IsNullOrWhiteSpace(pair.Options.ProjectDir))
+        {
+            return;
+        }
+
         StringBuilder builder;
 
         var token = context.CancellationToken;
@@ -169,7 +179,7 @@ SUCCESS:
         var method = pair.Left.Method;
         var path = pair.Left.Path;
 
-        var filePath = Path.Combine(pair.Options.ProjectDirectory, path);
+        var filePath = Path.Combine(pair.Options.ProjectDir, path);
         if (!File.Exists(filePath))
         {
             var location = Location.None;

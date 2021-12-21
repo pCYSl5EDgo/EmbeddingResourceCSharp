@@ -12,6 +12,7 @@
     <RepositoryUrl>https://github.com/pCYSl5EDgo/EmbeddingResourceCSharp</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <RootNamespace>EmbedResourceCSharp</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
