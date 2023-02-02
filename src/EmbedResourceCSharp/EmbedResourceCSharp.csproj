@@ -12,8 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" PrivateAssets="all" />
     <PackageReference Include="OptionsSourceGenerator" Version="0.1.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SourceGeneratorUtility" Version="0.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -21,26 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../EmbedResourceCSharp.Roslyn3/EmbedResourceCSharp.Roslyn3.csproj" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-
-  <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/roslyn4.0" Visible="false" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
 
     <!-- Package the props file -->
     <Content Include="build\EmbedResourceCSharp.props" Pack="true" PackagePath="build" />
-    <Content Include="build\EmbedResourceCSharp.targets" Pack="true" PackagePath="build" />
   </ItemGroup>
-
-  <Target Name="ReferenceCrossTargeting" BeforeTargets="_GetPackageFiles">
-    <MSBuild Projects="../EmbedResourceCSharp.Roslyn3/EmbedResourceCSharp.Roslyn3.csproj" Targets="GetTargetPath">
-      <Output ItemName="Roslyn3Assembly" TaskParameter="TargetOutputs" />
-    </MSBuild>
-
-    <ItemGroup>
-      <None Include="%(Roslyn3Assembly.Identity)" Pack="true" PackagePath="analyzers/dotnet/roslyn3.11" Visible="false" />
-    </ItemGroup>
-  </Target>
 </Project>
