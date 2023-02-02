@@ -14,11 +14,4 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <RootNamespace>EmbedResourceCSharp</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-  </ItemGroup>
 </Project>
