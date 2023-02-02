@@ -25,7 +25,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <AdditionalFiles Include="build/EmbedResourceCSharp.props" OptionsSourceGenerator="true" />
+    <AdditionalFiles Include="build/EmbedResourceCSharp.props" OptionsSourceGenerator_Namespace="EmbedResourceCSharp" OptionsSourceGenerator_GlobalName="Options" />
   </ItemGroup>
 
   <ItemGroup>
